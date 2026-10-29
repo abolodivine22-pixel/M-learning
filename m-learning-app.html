@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M Learning App</title>
+<style>
+:root{--bg:#f4f3ff;--cd:rgba(255,255,255,.88);--tx:#1c1b3a;--mt:#6a6890;--pr:#6d4aff;--ac:#ff5fa2;--bd:#dcd8ff;--ok:#12935a;--no:#d63a56;--ov:rgba(244,243,255,.7)}
+[data-t=dark]{--bg:#080b1c;--cd:rgba(17,21,52,.86);--tx:#eceaff;--mt:#a29fd0;--pr:#8b6dff;--ac:#4cc9ff;--bd:#2b2f6b;--ok:#4be09a;--no:#ff7a92;--ov:rgba(8,11,28,.7)}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 80% 0,color-mix(in srgb,var(--pr) 30%,transparent),transparent 50%),var(--bg);color:var(--tx);line-height:1.5;min-height:100vh}
+#bg{position:fixed;inset:0;z-index:0;background:var(--bgi,none) no-repeat right bottom/auto 92%;opacity:var(--co,.5);filter:brightness(var(--cb,1));pointer-events:none}
+#ov{position:fixed;inset:0;z-index:0;background:linear-gradient(90deg,var(--ov) 40%,transparent);pointer-events:none}
+#app{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:10px 14px 70px}
+h1,h2,h3{margin:.3em 0}
+.logo{font-size:1.3rem;font-weight:800;background:linear-gradient(90deg,var(--pr),var(--ac));-webkit-background-clip:text;background-clip:text;color:transparent}
+nav{display:flex;gap:4px;flex-wrap:wrap;align-items:center;padding:6px 0 12px}
+nav .logo{margin-right:auto}
+nav button{background:none;border:0;color:var(--tx);padding:9px 11px;border-radius:10px;font:inherit;cursor:pointer;min-height:40px}
+nav button.on{background:linear-gradient(90deg,var(--pr),var(--ac));color:#fff}
+.card{background:var(--cd);backdrop-filter:blur(6px);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:12px}
+.card.k{cursor:pointer}.card.k:hover{border-color:var(--pr);box-shadow:0 0 18px color-mix(in srgb,var(--pr) 35%,transparent)}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.g .card{margin:0}
+.mt{color:var(--mt);font-size:.88rem}.ok{color:var(--ok)}.no{color:var(--no)}
+input,select,textarea{width:100%;padding:10px;margin:5px 0;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;min-height:42px}
+input[type=checkbox],input[type=range]{width:auto;min-height:0}input[type=range]{width:100%}
+textarea{min-height:110px;font-family:ui-monospace,Menlo,monospace;font-size:.82rem}
+.b{background:linear-gradient(90deg,var(--pr),var(--ac));color:#fff;border:0;padding:10px 15px;border-radius:10px;font:inherit;cursor:pointer;margin:3px 5px 3px 0;min-height:42px}
+.b.a{background:none;color:var(--tx);border:1px solid var(--bd)}.b.d{background:var(--no)}.b.s{padding:5px 10px;min-height:32px;font-size:.85rem}
+.o{display:block;width:100%;text-align:left;background:var(--bg);color:var(--tx);border:2px solid var(--bd);border-radius:12px;padding:12px;margin:7px 0;font:inherit;cursor:pointer}
+.o.sel{border-color:var(--pr)}.o.r{border-color:var(--ok)}.o.w{border-color:var(--no)}
+.bar{height:9px;background:var(--bd);border-radius:6px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pr),var(--ac))}
+table{width:100%;border-collapse:collapse;font-size:.88rem}th,td{text-align:left;padding:7px;border-bottom:1px solid var(--bd);vertical-align:top}
+.wrap{overflow-x:auto}
+.tag{display:inline-block;font-size:.75rem;padding:1px 8px;border-radius:9px;background:var(--bd);margin-right:4px}
+.av{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--pr),var(--ac));display:grid;place-items:center;color:#fff;font-size:1.5rem;font-weight:800;overflow:hidden}.av img{width:100%;height:100%;object-fit:cover}
+.chs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.chs .card{margin:0;padding:10px;text-align:center}.chs .on{border:2px solid var(--pr)}
+.chs img,.pv{max-width:100%;max-height:150px;object-fit:contain}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.nar{max-width:420px;margin:30px auto}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 140px}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9;background:var(--pr);color:#fff;padding:10px 16px;border-radius:12px;display:none;max-width:90%}
+#toast.e{background:var(--no)}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<div id="bg"></div><div id="ov"></div><div id="app"></div><div id="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== CONFIG: paste your Supabase values (Project Settings -> API) ===== */
+/* Use the PUBLISHABLE key (sb_publishable_...). NEVER paste a secret or service_role key here. */
+const SUPABASE_URL='https://YOUR-PROJECT.supabase.co',SUPABASE_KEY='sb_publishable_YOUR_KEY';
+const CONFIGURED=!/YOUR-PROJECT|YOUR_KEY/.test(SUPABASE_URL+SUPABASE_KEY)&&!!window.supabase;
+const sb=CONFIGURED?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+
+/* ===== helpers ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let _tt;const toast=(m,e)=>{const t=$('#toast');t.textContent=m;t.className=e?'e':'';t.style.display='block';clearTimeout(_tt);_tt=setTimeout(()=>t.style.display='none',3500)};
+const LS={g:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch{toast('Storage is full or blocked.',1);return false}}};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const SUBS={maths:'Mathematics',english:'English Language',science:'Basic Science',computer:'Computer Studies'};
+const ICON={maths:'➗',english:'📖',science:'🔬',computer:'💻'};
+const TYPES={mcq:'Multiple choice',tf:'True / false',short:'Short answer',blank:'Fill in the blank'};
+const norm=s=>String(s??'').toLowerCase().trim().replace(/\s+/g,' ').replace(/[.!?]+$/,'');
+
+/* ===== state + Supabase data layer ===== */
+const emptyD=()=>({users:[],lessons:[],qs:[],quizzes:[],results:[],notes:[],pc:{}});
+let D=emptyD(),me=null,AV='login',V='home',CH=[],PEND=null,IM=null,SEL=new Set(),R=null,TAB='bank',TT=null;
+const U=()=>D.users.find(u=>u.id===me),isT=()=>U()?.role==='teacher';
+const need=()=>{if(!isT()){toast('Teachers only.',1);return false}return true};
+/* row mappers: database column names <-> the short field names the UI uses */
+const fromProf=p=>({id:p.id,e:p.id,email:p.email,un:p.username,name:p.full_name,role:p.role,lvl:p.level||'Year 7',subs:p.subjects||[],pic:p.avatar||null,rec:p.progress?.rec||[],done:p.progress?.done||[],p:{op:.5,br:1,...(p.prefs||{})}});
+const fromLesson=r=>({id:r.id,sub:r.subject,lvl:r.level,topic:r.topic,diff:r.difficulty,title:r.title,body:r.body,ex:r.example});
+const fromQuiz=r=>({id:r.id,title:r.title,qids:r.question_ids||[],time:r.time_minutes,fb:r.feedback,shuf:r.shuffle,due:r.due||'',as:r.assigned_to||'all',pub:r.published,by:r.owner});
+const fromRes=r=>({id:r.id,e:r.student,qid:r.quiz_id,qt:r.quiz_title,d:Date.parse(r.created_at),t:r.total,c:r.correct,w:r.total-r.correct,mk:r.marks,mx:r.max_marks,sec:r.seconds,by:r.by_subject||{}});
+const fromNote=r=>({id:r.id,to:r.user_id,text:r.text,d:Date.parse(r.created_at),read:r.read});
+const fromQ=r=>({id:r.id,bank:r.bank,type:r.type,sub:r.subject,lvl:r.level,topic:r.topic,diff:r.difficulty,marks:r.marks,q:r.question,o:r.options||[],a:r.type==='mcq'?+r.answer:r.answer,ex:r.explanation||'',img:r.image||''});
+const toDb=q=>({bank:q.bank,type:q.type,subject:q.sub,level:q.lvl,topic:q.topic,difficulty:q.diff,marks:q.marks,question:q.q,options:q.o,answer:String(q.a),explanation:q.ex||null,image:q.img||null});
+/* load everything the signed-in role is allowed to see (Row Level Security decides) */
+async function syncAll(){
+ const t=isT(),calls=[sb.from('lessons').select('*'),sb.from('quizzes').select('*'),sb.from('results').select('*').order('created_at'),sb.from('notifications').select('*').order('created_at')];
+ if(t)calls.push(sb.from('questions').select('*').order('created_at'),sb.from('profiles').select('*'));
+ const r=await Promise.all(calls),bad=r.find(x=>x.error);
+ if(bad){toast('Could not load data: '+bad.error.message,1);return false}
+ D.lessons=r[0].data.map(fromLesson);D.quizzes=r[1].data.map(fromQuiz);D.results=r[2].data.map(fromRes);D.notes=r[3].data.map(fromNote);
+ if(t){D.qs=r[4].data.map(fromQ);D.users=r[5].data.map(fromProf)}
+ else{D.qs=[];const c=await sb.rpc('practice_counts');D.pc=c.data||{}}
+ return true}
+/* profile + settings are written back (debounced) to the profiles table */
+let _sv;const save=()=>{clearTimeout(_sv);_sv=setTimeout(flushProf,400);return true};
+async function flushProf(){const u=U();if(!u||!sb)return;
+ const {error}=await sb.from('profiles').update({full_name:u.name,username:u.un,level:u.lvl,subjects:u.subs,avatar:u.pic,prefs:u.p,progress:{rec:u.rec,done:u.done}}).eq('id',me);
+ if(error)toast('Could not save: '+error.message,1)}
+async function pollNotes(){if(!me||!sb)return;const {data}=await sb.from('notifications').select('*').order('created_at');
+ if(!data)return;D.notes=data.map(fromNote);const b=document.querySelector('[aria-label=Notifications]');if(b)b.textContent='🔔'+(unread()||'');if(V==='notes')render()}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollNotes()});setInterval(pollNotes,60000);
+
+/* ===== theme + character background ===== */
+function applyBg(){const u=U(),p=u?.p||{},c=CH.find(x=>x.id===p.ch),r=document.documentElement;
+ r.style.setProperty('--bgi',c&&c.src?`url("${c.src}")`:'none');r.style.setProperty('--co',p.op??.5);r.style.setProperty('--cb',p.br??1);
+ r.dataset.t=p.th||LS.g('mla_th','dark')}
+function setTheme(t){LS.s('mla_th',t);if(U()){U().p.th=t;save()}applyBg();render()}
+
+/* ===== auth (Supabase Auth) ===== */
+const err=m=>{const e=$('#er');if(e)e.textContent=m};
+const redirect=()=>location.origin+location.pathname;
+async function doReg(){
+ const g=i=>$('#'+i).value.trim(),name=g('nm'),un=g('un'),e=g('em').toLowerCase(),pw=$('#pw').value;
+ if(name.length<2)return err('Enter your full name.');
+ if(!/^[a-z0-9_]{3,20}$/i.test(un))return err('Username: 3–20 letters, numbers or underscores.');
+ if(!/^\S+@\S+\.\S+$/.test(e))return err('Enter a valid email address.');
+ if(pw.length<8)return err('Password must be at least 8 characters.');
+ if(pw!==$('#pc').value)return err('Passwords do not match.');
+ const ok=await sb.rpc('username_available',{p_username:un});if(ok.data===false)return err('That username is taken.');
+ const {data,error}=await sb.auth.signUp({email:e,password:pw,options:{data:{username:un,full_name:name},emailRedirectTo:redirect()}});
+ if(error)return err(error.message);
+ if(data.session){await enter(data.user);return}            /* email confirmation switched off */
+ AV='login';render();toast('Account created. Check your email to confirm it, then sign in.')}
+async function doLogin(){
+ const {data,error}=await sb.auth.signInWithPassword({email:$('#em').value.trim().toLowerCase(),password:$('#pw').value});
+ if(error)return err(/confirm/i.test(error.message)?'Please confirm your email first.':'Email or password is incorrect.');
+ await enter(data.user)}
+async function doForgot(){const e=$('#em').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(e))return err('Enter your email address.');
+ const {error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:redirect()});
+ if(error)return err(error.message);AV='login';render();toast('If that email is registered, a reset link is on its way.')}
+async function doRecover(){const p=$('#pw').value;if(p.length<8)return err('Password must be at least 8 characters.');if(p!==$('#pc').value)return err('Passwords do not match.');
+ const {error}=await sb.auth.updateUser({password:p});if(error)return err(error.message);
+ await sb.auth.signOut();AV='login';history.replaceState(null,'',redirect());render();toast('Password updated. Please sign in.')}
+async function enter(user){
+ me=user.id;toast('Loading your data…');
+ const {data,error}=await sb.from('profiles').select('*').eq('id',me).single();
+ if(error||!data){toast('Could not load your profile.',1);await sb.auth.signOut();me=null;return render()}
+ D=emptyD();D.users=[fromProf(data)];await syncAll();await loadCh();V=isT()?'teach':'home';render()}
+async function boot(){
+ if(!CONFIGURED){render();return}
+ sb.auth.onAuthStateChange((ev)=>{if(ev==='PASSWORD_RECOVERY'){AV='recover';me=null;render()}else if(ev==='SIGNED_OUT'){me=null;D=emptyD();CH=[];R=null;applyBg();render()}});
+ const {data}=await sb.auth.getSession();
+ if(data.session&&AV!=='recover')await enter(data.session.user);else{applyBg();render()}}
+async function logout(){R&&clearInterval(R.iv);await sb.auth.signOut();me=null;D=emptyD();CH=[];R=null;applyBg();render()}
+const vSetup=()=>`<div class="card nar"><h2>Connect Supabase</h2><p>Open <b>m-learning-app.html</b> in a text editor and set <b>SUPABASE_URL</b> and <b>SUPABASE_KEY</b> (publishable key) at the top of the script. Make sure you ran <b>supabase-setup.sql</b>, then reload this page.</p><p class=mt>If you already did, check your internet connection: the Supabase library loads from a CDN.</p></div>`;
+const vRecover=()=>`<div class="card nar"><h2>Choose a new password</h2><input id=pw type=password placeholder="New password" autocomplete=new-password><input id=pc type=password placeholder="Confirm password" autocomplete=new-password><button class=b onclick="doRecover()">Update password</button><p id=er class=no role=alert></p></div>`;
+const vAuth=()=>{const r=AV==='reg',f=AV==='forgot';return `<div class="card nar"><div class=logo style="font-size:1.8rem">M Learning App</div><p class=mt>Learn • Grow • Achieve</p><h2>${r?'Create account':f?'Reset password':'Sign in'}</h2>
+${r?`<input id=nm placeholder="Full name" autocomplete=name><input id=un placeholder=Username autocomplete=username>`:''}
+<input id=em type=email placeholder="Email address" autocomplete=email>${f?'':`<input id=pw type=password placeholder=Password autocomplete="${r?'new-password':'current-password'}">`}
+${r?`<input id=pc type=password placeholder="Confirm password" autocomplete=new-password>`:''}
+<button class=b onclick="${r?'doReg()':f?'doForgot()':'doLogin()'}">${r?'Register':f?'Send reset link':'Sign in'}</button>
+<p class=mt>${r?`Have an account? <a href=# onclick="AV='login';render();return false">Sign in</a>`:`New here? <a href=# onclick="AV='reg';render();return false">Create an account</a> · <a href=# onclick="AV='${f?'login':'forgot'}';render();return false">${f?'Back to sign in':'Forgot password?'}</a>`}</p>
+${r?'<p class=mt>Teacher access is enabled by your school administrator after you register.</p>':''}
+<p id=er class=no role=alert></p><button class="b a s" onclick="setTheme(document.documentElement.dataset.t==='dark'?'light':'dark')">Toggle theme</button></div>`};
+
+/* ===== quiz engine =====
+   Students: questions come from get_quiz()/get_practice() WITHOUT answers; feedback from check_answer(); marking by submit_quiz().
+   Teacher preview: runs locally on the full question bank and saves nothing. */
+const mark=(q,a)=>a==null||a===''?false:(q.type==='mcq'||q.type==='tf')?a===q.a:String(q.a).split('|').map(norm).includes(norm(a));
+const ansTxt=q=>q.type==='mcq'?q.o[q.a]:q.type==='tf'?(q.a==='true'?'True':'False'):String(q.a).split('|')[0];
+async function run(qz,prev){
+ R&&clearInterval(R.iv);let list,qq=qz;
+ if(prev)list=qz.qids.map(id=>D.qs.find(q=>q.id===id)).filter(Boolean);
+ else{toast('Loading quiz…');
+  const r=qz.id?await sb.rpc('get_quiz',{p_quiz:qz.id}):await sb.rpc('get_practice',{p_subject:qz.sub,p_topic:qz.topic||null});
+  if(r.error)return toast(r.error.message,1);
+  if(qz.id){list=r.data.questions;qq={...qz,fb:r.data.feedback,time:r.data.time,shuf:r.data.shuffle}}
+  else{list=r.data;qq={id:null,title:qz.title,fb:'now',time:0}}}
+ if(!list.length)return toast('This quiz has no questions.',1);
+ if(qq.shuf)list=[...list].sort(()=>Math.random()-.5);
+ R={qz:qq,orig:qz,list,i:0,a:{},k:{},t0:Date.now(),left:(qq.time||0)*60,prev,done:0};
+ if(R.left)R.iv=setInterval(()=>{R.left--;const t=$('#tm');if(t)t.textContent=Math.floor(R.left/60)+':'+String(R.left%60).padStart(2,'0');if(R.left<=0){toast('Time is up. Submitting.');submit()}},1000);
+ V='run';render()}
+const practice=(sub,topic)=>run({id:null,sub,topic,title:SUBS[sub]+' practice'},0);
+const setA=v=>{if(!R.k[R.i]){R.a[R.i]=v;render()}};
+const typeA=v=>{if(!R.k[R.i])R.a[R.i]=v};
+async function chk(){const q=R.list[R.i],a=R.a[R.i];if(a==null||a==='')return toast('Answer the question first.',1);
+ if(R.prev)R.k[R.i]={ok:mark(q,a),raw:q.type==='mcq'||q.type==='tf'?String(q.a):null,ans:ansTxt(q),ex:q.ex};
+ else{const {data,error}=await sb.rpc('check_answer',{p_quiz:R.qz.id||null,p_question:q.id,p_answer:String(a)});
+  if(error)return toast(error.message,1);R.k[R.i]={ok:data.ok,raw:data.raw,ans:data.answer,ex:data.explanation}}
+ render()}
+const nav=d=>{R.i=Math.max(0,Math.min(R.list.length-1,R.i+d));render()};
+async function submit(){if(!R||R.done||R.busy)return;R.busy=1;clearInterval(R.iv);
+ const sec=R.qz.time?Math.round((Date.now()-R.t0)/1000):null;
+ if(R.prev){let c=0,mk=0,mx=0;R.list.forEach((q,i)=>{mx+=q.marks;if(mark(q,R.a[i])){c++;mk+=q.marks}});
+  R.res={qt:R.qz.title,t:R.list.length,c,w:R.list.length-c,mk,mx,sec};
+  R.review=R.list.map((q,i)=>({q:q.q,ok:mark(q,R.a[i]),your:q.type==='mcq'&&R.a[i]!=null?q.o[R.a[i]]:R.a[i],ans:ansTxt(q),ex:q.ex}))}
+ else{const ans={};R.list.forEach((q,i)=>ans[q.id]=R.a[i]==null?'':String(R.a[i]));
+  const {data,error}=await sb.rpc('submit_quiz',{p_quiz:R.qz.id||null,p_answers:ans,p_seconds:sec});
+  if(error){R.busy=0;return toast('Could not submit: '+error.message,1)}
+  R.res={qt:R.qz.title,t:data.total,c:data.correct,w:data.wrong,mk:data.marks,mx:data.max,sec};
+  R.review=data.review.map(x=>({q:x.q,ok:x.ok,your:x.your,ans:x.answer,ex:x.explanation}));
+  await syncAll()}
+ R.done=1;R.busy=0;render()}
+function vRun(){const q=R.list[R.i],a=R.a[R.i],k=R.k[R.i],fb=R.qz.fb==='now'&&k;
+ if(R.done){const r=R.res;return `<div class=card><h2>Results: ${esc(r.qt)}</h2><p style="font-size:2rem;margin:0">${r.c} / ${r.t}</p>
+ <p class=mt>Accuracy ${Math.round(r.c/r.t*100)}% · Marks ${r.mk}/${r.mx} · ${r.w} incorrect${r.sec!=null?' · Time '+r.sec+'s':''}${R.prev?' · Preview, not saved':' · Saved to your score history'}</p>
+ <button class=b onclick="run(R.orig,R.prev)">Restart quiz</button><button class="b a" onclick="go('${R.prev?'teach':'home'}')">Done</button></div>
+ ${R.review.map((x,i)=>`<div class=card><b>${i+1}. ${esc(x.q)}</b><br><span class="${x.ok?'ok':'no'}">${x.ok?'Correct':'Incorrect'}</span> · Your answer: ${esc(x.your||'(none)')} · Correct: ${esc(x.ans)}<br><span class=mt>${esc(x.ex||'')}</span></div>`).join('')}`}
+ let inp='';
+ if(q.type==='mcq')inp=q.o.map((o,j)=>`<button class="o ${fb?(String(j)===k.raw?'r':j===a?'w':''):a===j?'sel':''}" onclick="setA(${j})">${'ABCDEF'[j]}. ${esc(o)}</button>`).join('');
+ else if(q.type==='tf')inp=['true','false'].map(v=>`<button class="o ${fb?(v===k.raw?'r':v===a?'w':''):a===v?'sel':''}" onclick="setA('${v}')">${v==='true'?'True':'False'}</button>`).join('');
+ else inp=`<input placeholder="Type your answer" value="${esc(a??'')}" ${fb?'disabled':''} oninput="typeA(this.value)">`;
+ return `<div class=card><div class=row><span class=mt>${esc(R.qz.title)} · Question ${R.i+1} of ${R.list.length} · ${q.marks} mark${q.marks>1?'s':''}${R.prev?' · preview':''}</span>${R.qz.time?`<b id=tm style="text-align:right">${Math.floor(R.left/60)}:${String(R.left%60).padStart(2,'0')}</b>`:''}</div>
+ <h3>${esc(q.q)}</h3>${inp}
+ ${fb?`<p class="${k.ok?'ok':'no'}"><b>${k.ok?'Correct!':'Incorrect. Answer: '+esc(k.ans)}</b></p><p class=mt>${esc(k.ex||'')}</p>`:''}
+ <div style="margin-top:10px"><button class="b a" onclick="nav(-1)" ${R.i?'':'disabled'}>Previous</button>
+ ${R.qz.fb==='now'&&!k?'<button class=b onclick="chk()">Check answer</button>':''}
+ <button class="b a" onclick="nav(1)" ${R.i<R.list.length-1?'':'disabled'}>Next</button>
+ <button class=b onclick="if(confirm('Submit the quiz now?'))submit()">Submit quiz</button>
+ <button class="b a" onclick="if(confirm('Restart and clear your answers?'))run(R.orig,R.prev)">Restart</button></div></div>`}
+
+/* ===== question import ===== */
+const MAXF=1e6,MAXQ=500;
+const KEYS={type:'type',subject:'sub',sub:'sub',level:'lvl',class:'lvl',topic:'topic',difficulty:'diff',marks:'marks',question:'q',a:'A',b:'B',c:'C',d:'D',answer:'a',explanation:'ex',image:'img'};
+const normType=t=>{t=norm(t);return /^(mcq|multiple|multiple choice|multiple-choice)$/.test(t)?'mcq':/^(tf|true.?false|true-or-false)$/.test(t)?'tf':/^(short|short.?answer)$/.test(t)?'short':/^(blank|fill|fill.?in.*)$/.test(t)?'blank':''};
+const normSub=s=>{s=norm(s);return s.includes('math')?'maths':s.includes('eng')?'english':s.includes('sci')?'science':s.includes('comp')?'computer':''};
+function parseCSV(t){const rows=[];let r=[],f='',q=false;
+ for(let i=0;i<t.length;i++){const c=t[i];
+  if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+  else if(c=='"')q=true;else if(c==','){r.push(f);f=''}
+  else if(c=='\n'||c=='\r'){if(c=='\r'&&t[i+1]=='\n')i++;r.push(f);f='';if(r.some(x=>x.trim()))rows.push(r);r=[]}else f+=c}
+ r.push(f);if(r.some(x=>x.trim()))rows.push(r);return rows}
+/* text -> array of plain objects; throws a readable Error on bad input */
+function parseText(t){t=t.replace(/^\uFEFF/,'').trim();
+ if(!t)throw new Error('Nothing to import.');
+ if(/\0/.test(t))throw new Error('This looks like a binary file, not CSV or JSON text.');
+ if(t[0]==='['||t[0]==='{'){let j;try{j=JSON.parse(t)}catch(e){throw new Error('Invalid JSON: '+e.message)}
+  if(!Array.isArray(j))j=j.questions;if(!Array.isArray(j))throw new Error('JSON must be an array of questions or {"questions":[...]}.');
+  return j.map(x=>{const o={};for(const k in x){const m=KEYS[k.toLowerCase()];if(m)o[m]=x[k]}
+   if(Array.isArray(x.options)){['A','B','C','D'].forEach((L,i)=>o[L]=x.options[i])}return o})}
+ const rows=parseCSV(t);if(rows.length<2&&!/question/i.test(rows[0]?.join()))throw new Error('CSV needs a header row and at least one question.');
+ const h=rows.shift().map(x=>KEYS[x.trim().toLowerCase()]);if(!h.includes('q'))throw new Error('CSV header must include a "question" column.');
+ return rows.map(r=>{const o={};h.forEach((k,i)=>{if(k)o[k]=r[i]});return o})}
+/* validate one row -> {q, errs} */
+function vrow(o,dest){const errs=[],T=normType(o.type||'mcq'),sub=normSub(o.sub)||dest.sub,q=String(o.q??'').trim();
+ const opts=['A','B','C','D'].map(L=>String(o[L]??'').trim()).filter(Boolean);
+ let a=String(o.a??'').trim();
+ if(!T)errs.push('Unknown type');if(!q)errs.push('Missing question');else if(q.length>500)errs.push('Question over 500 characters');
+ if(!sub)errs.push('Missing subject');
+ const mk=o.marks==null||o.marks===''?1:Number(o.marks);if(!(mk>0&&mk<=100))errs.push('Marks must be 1–100');
+ let diff=norm(o.diff||'medium');if(!/^(easy|medium|hard)$/.test(diff)){errs.push('Difficulty must be easy, medium or hard')}
+ if(T==='mcq'){if(opts.length<2)errs.push('Needs at least 2 options');
+  const i=/^[A-D]$/i.test(a)?a.toUpperCase().charCodeAt(0)-65:opts.findIndex(x=>norm(x)===norm(a));
+  if(i<0||i>=opts.length)errs.push('Answer must match an option');a=i}
+ else if(T==='tf'){a=norm(a);if(!/^(true|false)$/.test(a))errs.push('Answer must be true or false')}
+ else if(!a)errs.push('Missing accepted answer(s)');
+ return{q:{id:'',type:T,sub,lvl:String(o.lvl||'General').slice(0,30),topic:String(o.topic||dest.topic||'General').slice(0,40),diff,marks:mk,q,o:T==='mcq'?opts:[],a,ex:String(o.ex||'').slice(0,400),img:String(o.img||'').slice(0,200),bank:dest.bank},errs}}
+const dupKey=q=>q.sub+'|'+q.type+'|'+norm(q.q);
+function rowState(){const dest=IM.dest,seen=new Set(D.qs.map(dupKey));
+ IM.rows.forEach(r=>{const v=vrow(r.o,dest);r.q=v.q;r.errs=v.errs;r.dup=false;
+  if(!r.errs.length){const k=dupKey(r.q);if(seen.has(k))r.dup=true;else if(r.inc)seen.add(k)}})}
+async function loadImp(f,pasted){if(!need())return;
+ try{let t=pasted;if(f){const ext=f.name.split('.').pop().toLowerCase();
+   if(!['csv','json','txt'].includes(ext))throw new Error('Only .csv, .json or .txt files are accepted.');
+   if(f.size>MAXF)throw new Error('File is over 1 MB.');t=await f.text()}
+  const items=parseText(t);if(items.length>MAXQ)throw new Error(`Too many questions (${items.length}). Limit is ${MAXQ} per import.`);
+  IM={rows:items.map(o=>({o,inc:true})),dest:IM?.dest||{sub:'',topic:'',bank:'Imported'},sum:null};rowState();render()}
+ catch(e){toast(e.message,1)}}
+function imDest(){IM.dest={sub:$('#ds').value,topic:$('#dt').value.trim(),bank:$('#db').value.trim()||'Imported'};rowState();render()}
+function imEdit(i,k,v){IM.rows[i].o[k]=v;rowState();render()}
+function imTog(i){IM.rows[i].inc=!IM.rows[i].inc;rowState();render()}
+async function confirmImp(){if(!need())return;let ok=[],sk=0,rj=0;
+ IM.rows.forEach(r=>{if(!r.inc)sk++;else if(r.errs.length)rj++;else if(r.dup)sk++;else ok.push(r.q)});
+ if(ok.length){const {data,error}=await sb.from('questions').insert(ok.map(toDb)).select();   /* one request = all or nothing */
+  if(error)return toast('Import failed. Your existing questions are unchanged. '+error.message,1);
+  D.qs.push(...data.map(fromQ))}
+ IM={rows:[],dest:IM.dest,sum:`Imported ${ok.length}. Skipped ${sk} (excluded or duplicate). Rejected ${rj} with errors.`};render()}
+function manualAdd(){if(!need())return;const g=i=>$('#'+i).value;
+ const o={type:g('mt'),sub:g('ms'),lvl:g('ml'),topic:g('mp'),diff:g('md'),marks:g('mm'),q:g('mq'),A:g('ma'),B:g('mb'),C:g('mc'),D:g('mdd'),a:g('mn'),ex:g('mx')};
+ IM=IM&&IM.rows?IM:{rows:[],dest:{sub:'',topic:'',bank:'Manual'}};IM.rows.push({o,inc:true});rowState();render()}
+const dl=(n,t,m)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m||'text/plain'}));a.download=n;a.click()};
+const cs=v=>{v=String(v??'');if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+const HEAD='type,subject,level,topic,difficulty,marks,question,A,B,C,D,answer,explanation,image';
+const qrow=q=>[q.type,q.sub,q.lvl,q.topic,q.diff,q.marks,q.q,...[0,1,2,3].map(i=>q.o[i]??''),q.type==='mcq'?'ABCD'[q.a]:q.a,q.ex,q.img||''].map(cs).join(',');
+const expQ=f=>{const l=D.qs.filter(q=>q.bank!=null||1);f==='csv'?dl('question-bank.csv',HEAD+'\n'+l.map(qrow).join('\n'),'text/csv'):dl('question-bank.json',JSON.stringify(l.map(q=>({type:q.type,subject:q.sub,level:q.lvl,topic:q.topic,difficulty:q.diff,marks:q.marks,question:q.q,options:q.o,answer:q.type==='mcq'?'ABCD'[q.a]:q.a,explanation:q.ex,image:q.img||''})),null,2),'application/json')};
+const TPL_CSV=HEAD+'\nmcq,maths,Year 8,Algebra,medium,2,"Solve 2x = 10",3,4,5,6,C,Divide both sides by 2.,\ntf,science,Year 7,Matter,easy,1,Water is a liquid at room temperature.,,,,,true,,\nshort,english,Year 8,Grammar,medium,1,What is the plural of child?,,,,,children|childs,Irregular plural.,\nblank,computer,Year 7,Hardware,easy,1,The ____ is the brain of the computer.,,,,,CPU|processor,,';
+const TPL_JSON=JSON.stringify([{type:'mcq',subject:'maths',level:'Year 8',topic:'Algebra',difficulty:'medium',marks:2,question:'Solve 2x = 10',options:['3','4','5','6'],answer:'C',explanation:'Divide both sides by 2.'},{type:'short',subject:'english',level:'Year 8',topic:'Grammar',difficulty:'medium',marks:1,question:'Plural of child?',answer:'children|childs'}],null,2);
+
+/* ===== question bank ===== */
+let F={s:'',sub:'',lvl:'',diff:''};
+const fil=()=>D.qs.filter(q=>(!F.sub||q.sub===F.sub)&&(!F.lvl||q.lvl===F.lvl)&&(!F.diff||q.diff===F.diff)&&(!F.s||norm(q.q+' '+q.topic).includes(norm(F.s))));
+const setF=()=>{F={s:$('#fs').value,sub:$('#fb').value,lvl:$('#fl').value,diff:$('#fd').value};render();const e=$('#fs');e.focus();e.setSelectionRange(99,99)};
+async function editQ(id){if(!need())return;const q=D.qs.find(x=>x.id===id),t=prompt('Question text',q.q);if(t===null)return;
+ const a=prompt('Correct answer ('+(q.type==='mcq'?'option letter A–D':q.type==='tf'?'true or false':'accepted answers separated by |')+')',q.type==='mcq'?'ABCD'[q.a]:q.a);if(a===null)return;
+ const ex=prompt('Explanation',q.ex||'');if(ex===null)return;
+ const v=vrow({type:q.type,sub:q.sub,lvl:q.lvl,topic:q.topic,diff:q.diff,marks:q.marks,q:t,A:q.o[0],B:q.o[1],C:q.o[2],D:q.o[3],a,ex},{sub:q.sub,topic:q.topic,bank:q.bank});
+ if(v.errs.length)return toast(v.errs.join('; '),1);
+ const {data,error}=await sb.from('questions').update(toDb(v.q)).eq('id',id).select().single();
+ if(error)return toast(error.message,1);Object.assign(q,fromQ(data));render()}
+async function delQ(id){if(!need()||!confirm('Delete this question? Quizzes using it will skip it.'))return;
+ const {error}=await sb.from('questions').delete().eq('id',id);if(error)return toast(error.message,1);
+ D.qs=D.qs.filter(q=>q.id!==id);SEL.delete(id);render()}
+const selQ=id=>{SEL.has(id)?SEL.delete(id):SEL.add(id);render()};
+
+/* ===== quizzes + lessons (teacher) ===== */
+async function sendNotes(ids,text){if(!ids.length)return;
+ const {error}=await sb.from('notifications').insert(ids.map(user_id=>({user_id,text})));if(error)toast('Saved, but notifications failed: '+error.message,1)}
+const studentIds=()=>D.users.filter(u=>u.role==='student').map(u=>u.id);
+const notifyQ=z=>sendNotes(z.as==='all'?studentIds():z.as,`New quiz assigned: "${z.title}"${z.due?' (due '+z.due+')':''}`);
+async function mkQuiz(pub){if(!need())return;const title=$('#qt').value.trim();
+ if(!title)return toast('Give the quiz a title.',1);if(!SEL.size)return toast('Select questions in the Question Bank first.',1);
+ const as=[...$('#qa').selectedOptions].map(o=>o.value);
+ const {data,error}=await sb.from('quizzes').insert({title:title.slice(0,80),question_ids:[...SEL],time_minutes:Math.max(0,+$('#qm').value||0),feedback:$('#qf').value,shuffle:$('#qs').checked,due:$('#qd').value||null,assigned_to:as.length?as:null,published:pub}).select().single();
+ if(error)return toast(error.message,1);
+ const z=fromQuiz(data);D.quizzes.push(z);if(pub)await notifyQ(z);SEL.clear();toast(pub?'Quiz published.':'Draft saved.');render()}
+async function togQ(id){if(!need())return;const z=D.quizzes.find(x=>x.id===id);
+ const {error}=await sb.from('quizzes').update({published:!z.pub}).eq('id',id);if(error)return toast(error.message,1);
+ z.pub=!z.pub;if(z.pub)await notifyQ(z);render()}
+async function delQz(id){if(!need()||!confirm('Delete this quiz?'))return;
+ const {error}=await sb.from('quizzes').delete().eq('id',id);if(error)return toast(error.message,1);D.quizzes=D.quizzes.filter(x=>x.id!==id);render()}
+function prevQ(){if(!SEL.size)return toast('Select questions first.',1);run({title:$('#qt').value||'Preview',qids:[...SEL],time:+$('#qm').value||0,fb:$('#qf').value,shuf:$('#qs').checked},1)}
+async function addLesson(){if(!need())return;const g=i=>$('#'+i).value.trim();if(!g('lt')||!g('lb'))return toast('Add a title and content.',1);
+ const {data,error}=await sb.from('lessons').insert({subject:g('ls'),level:g('ll')||'General',topic:g('lp')||'General',difficulty:g('ld'),title:g('lt').slice(0,80),body:g('lb').slice(0,3000),example:g('le').slice(0,500)||null}).select().single();
+ if(error)return toast(error.message,1);D.lessons.push(fromLesson(data));await sendNotes(studentIds(),'New lesson: '+data.title);toast('Lesson added.');render()}
+async function delLesson(id){if(!need()||!confirm('Delete this lesson?'))return;
+ const {error}=await sb.from('lessons').delete().eq('id',id);if(error)return toast(error.message,1);D.lessons=D.lessons.filter(l=>l.id!==id);render()}
+async function editLesson(id){if(!need())return;const l=D.lessons.find(x=>x.id===id),t=prompt('Lesson title',l.title);if(t===null||!t.trim())return;const b=prompt('Lesson content',l.body);if(b===null)return;
+ const {error}=await sb.from('lessons').update({title:t.trim().slice(0,80),body:b.slice(0,3000)}).eq('id',id);if(error)return toast(error.message,1);l.title=t.trim();l.body=b;render()}
+
+/* ===== characters (private Supabase Storage bucket "characters") ===== */
+const CB=()=>sb.storage.from('characters');
+async function loadCh(){CH=[];
+ const {data,error}=await sb.from('characters').select('*').order('created_at');
+ if(error)toast('Could not load characters: '+error.message,1);
+ else if(data.length){const s=await CB().createSignedUrls(data.map(c=>c.path),86400);   /* private files -> signed links */
+  CH=data.map((c,i)=>({id:c.id,name:c.name,path:c.path,src:s.data?.[i]?.signedUrl||''}))}
+ applyBg()}
+async function pickCh(inp){const f=inp.files[0];if(!f)return;
+ if(f.size>5e6)return toast('Image is over 5 MB.',1);
+ const b=new Uint8Array(await f.slice(0,12).arrayBuffer());
+ const ok=(b[0]==0x89&&b[1]==0x50&&b[2]==0x4e&&b[3]==0x47)||(b[0]==0xff&&b[1]==0xd8)||(b[0]==0x52&&b[1]==0x49&&b[8]==0x57&&b[9]==0x45);
+ if(!ok||!/^image\/(png|jpe?g|webp)$/.test(f.type))return toast('Use a PNG, JPG, JPEG or WebP image.',1);
+ const url=URL.createObjectURL(f),im=new Image();im.onerror=()=>toast('This image could not be read.',1);
+ im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  c.toBlob(bl=>{URL.revokeObjectURL(url);if(!bl)return toast('Could not process this image.',1);PEND={name:f.name.replace(/\.[^.]+$/,'').slice(0,40),blob:bl,src:URL.createObjectURL(bl)};render()},'image/webp',.9)};im.src=url}
+async function applyCh(){const name=$('#cn').value.trim().slice(0,40)||PEND.name,ext=PEND.blob.type==='image/png'?'png':'webp',path=`${me}/${crypto.randomUUID()}.${ext}`;
+ toast('Uploading…');
+ const up=await CB().upload(path,PEND.blob,{contentType:PEND.blob.type});if(up.error)return toast('Upload failed: '+up.error.message,1);
+ const {data,error}=await sb.from('characters').insert({name,path}).select().single();
+ if(error){await CB().remove([path]);return toast(error.message,1)}
+ URL.revokeObjectURL(PEND.src);PEND=null;U().p.ch=data.id;save();await loadCh();toast('Character applied.');render()}
+function useCh(id){U().p.ch=id;save();applyBg();render()}
+function noCh(){U().p.ch=null;save();applyBg();toast('Background reset to default.');render()}
+async function renCh(id){const c=CH.find(x=>x.id===id),n=prompt('New name',c.name);if(!n||!n.trim())return;
+ const {error}=await sb.from('characters').update({name:n.trim().slice(0,40)}).eq('id',id);if(error)return toast(error.message,1);c.name=n.trim().slice(0,40);render()}
+async function delCh(id){if(!confirm('Permanently delete this saved character?'))return;const c=CH.find(x=>x.id===id);
+ const r=await sb.from('characters').delete().eq('id',id);if(r.error)return toast(r.error.message,1);
+ await CB().remove([c.path]);CH=CH.filter(x=>x.id!==id);if(U().p.ch===id){U().p.ch=null;save()}applyBg();render()}
+const sl=(k,v)=>{U().p[k]=+v;applyBg()};
+
+/* ===== views ===== */
+const go=v=>{if(R&&R.iv&&v!=='run')clearInterval(R.iv);V=v;render()};
+const pg=(e,sub)=>{const r=D.results.filter(x=>x.e===e),a=[0,0];r.forEach(x=>{if(!sub)a[0]+=x.c,a[1]+=x.t;else if(x.by[sub]){a[0]+=x.by[sub][0];a[1]+=x.by[sub][1]}});return a[1]?Math.round(a[0]/a[1]*100):0};
+const notes=()=>D.notes.filter(n=>n.to===me);
+const unread=()=>notes().filter(n=>!n.read).length;
+function vHome(){const u=U(),r=D.results.filter(x=>x.e===me).slice(-4).reverse();
+ return `<div class=card><div class=row style="align-items:center"><div class=av style="flex:0 0 58px">${u.pic?`<img src="${u.pic}" alt="">`:esc(u.name[0])}</div><div><h2>Welcome, ${esc(u.name.split(' ')[0])}!</h2><span class=mt>${esc(u.lvl)} · overall progress ${pg(me)}%</span></div></div></div>
+ <div class=g>${Object.entries(SUBS).map(([k,n])=>`<div class="card k" onclick="CF.sub='${k}';go('courses')"><div style="font-size:1.8rem">${ICON[k]}</div><b>${n}</b><div class=bar><i style="width:${pg(me,k)}%"></i></div><span class=mt>${pg(me,k)}% accuracy</span></div>`).join('')}</div>
+ <div class=g style="margin-top:12px"><div class=card><h3>Recent lessons</h3>${(u.rec||[]).slice(0,4).map(id=>D.lessons.find(l=>l.id===id)).filter(Boolean).map(l=>`<p><a href=# onclick="openL('${l.id}');return false">${esc(l.title)}</a></p>`).join('')||'<p class=mt>You have not opened a lesson yet.</p>'}</div>
+ <div class=card><h3>Recent scores</h3>${r.map(x=>`<p>${esc(x.qt)}: <b>${x.c}/${x.t}</b> <span class=mt>${new Date(x.d).toLocaleDateString()}</span></p>`).join('')||'<p class=mt>No quizzes taken yet.</p>'}</div>
+ <div class=card><h3>Notifications (${unread()})</h3>${notes().slice(-3).reverse().map(n=>`<p class="${n.read?'mt':''}">${esc(n.text)}</p>`).join('')||'<p class=mt>Nothing new.</p>'}<button class="b a s" onclick="go('notes')">Open</button></div>
+ <div class=card><h3>Quick access</h3><button class=b onclick="go('char')">Character library</button><button class="b a" onclick="go('quizzes')">Quizzes</button>${isT()?`<button class="b a" onclick="TAB='bank';go('bank')">Question library</button>`:''}</div></div>`}
+let CF={s:'',sub:'',lvl:'',diff:''},LID=null;
+function openL(id){LID=id;const u=U();u.rec=[id,...(u.rec||[]).filter(x=>x!==id)].slice(0,8);save();go('lesson')}
+function done(id){const u=U();if(!u.done.includes(id))u.done.push(id);save();toast('Lesson marked complete.');render()}
+const setCF=()=>{CF={s:$('#cs').value,sub:$('#cb').value,lvl:$('#cl').value,diff:$('#cd').value};render();const e=$('#cs');e.focus();e.setSelectionRange(99,99)};
+const opts=(a,v)=>a.map(x=>`<option value="${esc(x[0]??x)}" ${v===(x[0]??x)?'selected':''}>${esc(x[1]??x)}</option>`).join('');
+const lvls=()=>[...new Set([...D.lessons,...D.qs].map(x=>x.lvl))].sort();
+function vCourses(){const l=D.lessons.filter(x=>(!CF.sub||x.sub===CF.sub)&&(!CF.lvl||x.lvl===CF.lvl)&&(!CF.diff||x.diff===CF.diff)&&(!CF.s||norm(x.title+' '+x.topic).includes(norm(CF.s))));
+ return `<h2>Course library</h2><div class="card row"><input id=cs placeholder="Search lessons" value="${esc(CF.s)}" oninput="setCF()"><select id=cb onchange="setCF()"><option value="">All subjects</option>${opts(Object.entries(SUBS),CF.sub)}</select><select id=cl onchange="setCF()"><option value="">All levels</option>${opts(lvls(),CF.lvl)}</select><select id=cd onchange="setCF()"><option value="">All difficulties</option>${opts(['easy','medium','hard'],CF.diff)}</select></div>
+ ${l.length?`<div class=g>${l.map(x=>`<div class="card k" onclick="openL('${x.id}')"><b>${ICON[x.sub]} ${esc(x.title)}</b><br><span class=tag>${SUBS[x.sub]}</span><span class=tag>${esc(x.lvl)}</span><span class=tag>${esc(x.topic)}</span><span class=tag>${x.diff}</span>${U().done.includes(x.id)?'<br><span class=ok>Completed</span>':''}</div>`).join('')}</div>`:'<div class=card><p class=mt>No lessons match. Clear a filter or ask your teacher to add lessons.</p></div>'}`}
+function vLesson(){const l=D.lessons.find(x=>x.id===LID);if(!l)return vCourses();
+ return `<button class="b a s" onclick="go('courses')">Back</button><div class=card><h2>${esc(l.title)}</h2><span class=tag>${SUBS[l.sub]}</span><span class=tag>${esc(l.lvl)}</span><span class=tag>${esc(l.topic)}</span>
+ <p>${esc(l.body).replace(/\n/g,'<br>')}</p>${l.ex?`<div class=card><b>Worked example</b><br>${esc(l.ex)}</div>`:''}
+ <button class=b onclick="practice('${l.sub}','${esc(l.topic).replace(/'/g,'')}')">Practise this topic</button><button class="b a" onclick="done('${l.id}')">Mark complete</button></div>`}
+function vQuizzes(){const mine=D.quizzes.filter(z=>z.pub&&(z.as==='all'||z.as.includes(me)));
+ return `<h2>Quizzes</h2><h3>Assigned to you</h3>${mine.map(z=>`<div class=card><b>${esc(z.title)}</b> <span class=mt>${z.qids.length} questions${z.time?' · '+z.time+' min':''}${z.due?' · due '+esc(z.due):''} · attempts: ${D.results.filter(r=>r.e===me&&r.qid===z.id).length}</span><br><button class=b onclick="run(D.quizzes.find(q=>q.id==='${z.id}'),0)">Start</button></div>`).join('')||'<div class=card><p class=mt>No quizzes assigned yet.</p></div>'}
+ <h3>Practice</h3><div class=g>${Object.entries(SUBS).map(([k,n])=>`<div class="card k" onclick="practice('${k}')">${ICON[k]} <b>${n}</b><br><span class=mt>${isT()?D.qs.filter(q=>q.sub===k).length:(D.pc[k]||0)} practice questions</span></div>`).join('')}</div>`}
+function vProgress(){const r=D.results.filter(x=>x.e===me),u=U(),last=r.slice(-8);
+ return `<h2>Progress</h2><div class=g><div class=card><b style="font-size:1.6rem">${u.done.length}</b><br><span class=mt>Lessons completed</span></div><div class=card><b style="font-size:1.6rem">${r.length}</b><br><span class=mt>Quizzes attempted</span></div><div class=card><b style="font-size:1.6rem">${pg(me)}%</b><br><span class=mt>Average accuracy</span></div></div>
+ <div class=card style="margin-top:12px"><h3>By subject</h3>${Object.entries(SUBS).map(([k,n])=>`<div>${n} <span class=mt>${pg(me,k)}%</span><div class=bar><i style="width:${pg(me,k)}%"></i></div></div>`).join('')}</div>
+ <div class=card><h3>Last ${last.length} quiz scores</h3><div style="display:flex;gap:6px;align-items:flex-end;height:110px">${last.map(x=>`<div style="flex:1;text-align:center" title="${esc(x.qt)}"><div style="height:${Math.round(x.c/x.t*90)+4}px;background:linear-gradient(var(--ac),var(--pr));border-radius:6px"></div><span class=mt>${Math.round(x.c/x.t*100)}%</span></div>`).join('')||'<span class=mt>No scores yet.</span>'}</div></div>
+ <div class="card wrap"><h3>Score history</h3><table><tr><th>Quiz</th><th>Date</th><th>Questions</th><th>Correct</th><th>Wrong</th><th>Score</th><th>Time</th></tr>${r.slice().reverse().map(x=>`<tr><td>${esc(x.qt)}</td><td>${new Date(x.d).toLocaleDateString()}</td><td>${x.t}</td><td>${x.c}</td><td>${x.w}</td><td>${x.mk}/${x.mx}</td><td>${x.sec!=null?x.sec+'s':'–'}</td></tr>`).join('')}</table></div>`}
+function vChar(){const a=U().p.ch;return `<h2>My character</h2>
+ <div class=card><h3>Import a character</h3><input type=file accept="image/png,image/jpeg,image/webp" onchange="pickCh(this)">
+ ${PEND?`<p><img class=pv src="${PEND.src}" alt="Preview"></p><input id=cn value="${esc(PEND.name)}" maxlength=40><button class=b onclick="applyCh()">Apply character</button><button class="b a" onclick="PEND=null;render()">Cancel</button>`:'<p class=mt>PNG, JPG or WebP up to 5 MB. Transparent PNGs work best. You can preview before applying.</p>'}</div>
+ <div class=card><h3>Library</h3>${CH.length?`<div class=chs>${CH.map(c=>`<div class="card ${a===c.id?'on':''}"><img src="${c.src}" alt="${esc(c.name)}"><div>${esc(c.name)}</div>${a===c.id?'<span class=ok>Active</span><br>':`<button class="b s" onclick="useCh('${c.id}')">Use</button>`}<button class="b a s" onclick="renCh('${c.id}')">Rename</button><button class="b d s" onclick="delCh('${c.id}')">Delete</button></div>`).join('')}</div>`:'<p class=mt>No characters yet. Import one above.</p>'}
+ ${a?'<p><button class="b a" onclick="noCh()">Remove character background</button></p>':''}</div>`}
+function vSettings(){const p=U().p;return `<h2>Settings</h2><div class=card><h3>Theme</h3><button class=b onclick="setTheme('dark')">Dark</button><button class="b a" onclick="setTheme('light')">Light</button></div>
+ <div class=card><h3>Character background</h3><label>Opacity <span class=mt>${Math.round((p.op??.5)*100)}%</span></label><input type=range min=0.05 max=1 step=0.05 value="${p.op??.5}" oninput="sl('op',this.value)" onchange="save();render()">
+ <label>Brightness</label><input type=range min=0.3 max=1.5 step=0.05 value="${p.br??1}" oninput="sl('br',this.value)" onchange="save()">
+ <button class="b a" onclick="noCh()">Reset to default background</button></div>
+ <div class=card><h3>Preferred subject</h3><select onchange="U().p.ps=this.value;save();toast('Saved.')"><option value="">None</option>${opts(Object.entries(SUBS),p.ps)}</select></div>
+ <div class=card><button class="b d" onclick="logout()">Sign out</button><p class=mt>Accounts and data are stored only in this browser on this device. They are not synchronised or shared across devices.</p></div>`}
+async function pickPic(inp){const f=inp.files[0];if(!f||!/^image\/(png|jpe?g|webp)$/.test(f.type)||f.size>3e6)return toast('Use a PNG, JPG or WebP under 3 MB.',1);
+ const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=128;const s=Math.min(im.width,im.height);c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,128,128);U().pic=c.toDataURL('image/jpeg',.85);save();render()};im.src=URL.createObjectURL(f)}
+async function saveProf(){const n=$('#pn').value.trim(),un=$('#pu').value.trim();
+ if(n.length<2||!/^[a-z0-9_]{3,20}$/i.test(un))return toast('Check your name and username.',1);
+ const u=U(),lvl=$('#pl').value.trim()||'Year 7',subs=[...document.querySelectorAll('.ps:checked')].map(x=>x.value);
+ const {error}=await sb.from('profiles').update({full_name:n,username:un,level:lvl,subjects:subs}).eq('id',me);
+ if(error)return toast(/duplicate|unique/i.test(error.message)?'That username is taken.':error.message,1);
+ Object.assign(u,{name:n,un,lvl,subs});toast('Profile saved.');render()}
+function vProfile(){const u=U();return `<h2>Profile</h2><div class=card><div class=av style="width:80px;height:80px">${u.pic?`<img src="${u.pic}" alt="">`:esc(u.name[0])}</div><input type=file accept="image/*" onchange="pickPic(this)">
+ <label>Name</label><input id=pn value="${esc(u.name)}"><label>Username</label><input id=pu value="${esc(u.un)}"><label>Class or level</label><input id=pl value="${esc(u.lvl)}">
+ <p>Preferred subjects: ${Object.entries(SUBS).map(([k,n])=>`<label><input class=ps type=checkbox value=${k} ${u.subs.includes(k)?'checked':''}> ${n}</label> `).join('')}</p>
+ <p class=mt>${esc(u.email)} · ${u.role}</p><button class=b onclick="saveProf()">Save profile</button></div>`}
+async function noteOp(kind,id){const t=sb.from('notifications');
+ const r=kind==='clear'?await t.delete().eq('user_id',me):kind==='all'?await t.update({read:true}).eq('user_id',me):await t.update({read:true}).eq('id',id);
+ if(r.error)return toast(r.error.message,1);
+ if(kind==='clear')D.notes=[];else D.notes.forEach(n=>{if(kind==='all'||n.id===id)n.read=true});render()}
+function vNotes(){return `<h2>Notifications</h2><button class="b a s" onclick="noteOp('all')">Mark all read</button><button class="b a s" onclick="noteOp('clear')">Clear all</button>
+ ${notes().slice().reverse().map(n=>`<div class=card><span class="${n.read?'mt':''}">${esc(n.text)}</span> <span class=mt>${new Date(n.d).toLocaleString()}</span> ${n.read?'':`<button class="b s" onclick="noteOp('one','${n.id}')">Mark read</button>`}</div>`).join('')||'<div class=card><p class=mt>You are all caught up.</p></div>'}`}
+
+/* ----- teacher views ----- */
+function vBank(){if(!isT())return vHome();const l=fil();
+ return `<h2>Question bank</h2><div class=card><div class=row><input id=fs placeholder="Search questions" value="${esc(F.s)}" oninput="setF()"><select id=fb onchange="setF()"><option value="">All subjects</option>${opts(Object.entries(SUBS),F.sub)}</select><select id=fl onchange="setF()"><option value="">All levels</option>${opts(lvls(),F.lvl)}</select><select id=fd onchange="setF()"><option value="">All difficulties</option>${opts(['easy','medium','hard'],F.diff)}</select></div>
+ <button class="b a s" onclick="expQ('csv')">Export CSV</button><button class="b a s" onclick="expQ('json')">Export JSON</button><span class=mt> ${l.length} of ${D.qs.length} questions · ${SEL.size} selected for a quiz</span></div>
+ <div class="card wrap"><table><tr><th></th><th>Question</th><th>Details</th><th></th></tr>${l.map(q=>`<tr><td><input type=checkbox ${SEL.has(q.id)?'checked':''} onchange="selQ('${q.id}')" aria-label="Select"></td><td>${esc(q.q)}<br><span class=mt>Answer: ${esc(ansTxt(q))}</span></td><td><span class=tag>${TYPES[q.type]}</span><span class=tag>${SUBS[q.sub]}</span><span class=tag>${esc(q.lvl)}</span><span class=tag>${esc(q.topic)}</span><span class=tag>${q.diff}</span><span class=tag>${q.marks} mk</span></td><td><button class="b a s" onclick="editQ('${q.id}')">Edit</button><button class="b d s" onclick="delQ('${q.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan=4 class=mt>No questions match. Use Import to add more.</td></tr>'}</table></div>`}
+function vImport(){const d=IM?.dest||{sub:'',topic:'',bank:'Imported'};
+ const form=`<div class=card><h3>Import questions</h3><p class=mt>Choose a CSV or JSON file (max 1 MB, ${MAXQ} questions), or paste text. You will preview and fix rows before anything is saved.</p>
+ <input type=file accept=".csv,.json,.txt" onchange="loadImp(this.files[0])"><textarea id=pt placeholder="Paste CSV or JSON here"></textarea><button class=b onclick="loadImp(null,$('#pt').value)">Parse pasted text</button>
+ <button class="b a s" onclick="dl('questions-template.csv',TPL_CSV,'text/csv')">Sample CSV</button><button class="b a s" onclick="dl('questions-template.json',TPL_JSON,'application/json')">Sample JSON</button>
+ <details><summary>Add one question manually</summary><div class=row><select id=mt>${opts(Object.entries(TYPES))}</select><select id=ms>${opts(Object.entries(SUBS))}</select><input id=ml placeholder="Level"><input id=mp placeholder="Topic"><select id=md>${opts(['easy','medium','hard'],'medium')}</select><input id=mm type=number value=1 min=1></div>
+ <input id=mq placeholder="Question text"><div class=row><input id=ma placeholder="Option A"><input id=mb placeholder="Option B"><input id=mc placeholder="Option C"><input id=mdd placeholder="Option D"></div><input id=mn placeholder="Answer (A–D, true/false, or accepted answers separated by |)"><input id=mx placeholder="Explanation"><button class=b onclick="manualAdd()">Add to preview</button></details></div>`;
+ if(!IM)return form;
+ const bad=IM.rows.filter(r=>r.inc&&r.errs.length).length,dup=IM.rows.filter(r=>r.dup).length;
+ return form+(IM.sum?`<div class=card><b class=ok>${esc(IM.sum)}</b></div>`:'')+(IM.rows.length?`<div class=card><h3>Preview (${IM.rows.length} rows)</h3>
+ <div class=row><select id=ds onchange="imDest()"><option value="">Default subject for rows without one</option>${opts(Object.entries(SUBS),d.sub)}</select><input id=dt placeholder="Default topic" value="${esc(d.topic)}" onchange="imDest()"><input id=db placeholder="Question bank name" value="${esc(d.bank)}" onchange="imDest()"></div>
+ <p class=mt>${bad} row(s) have errors, ${dup} duplicate(s). Fix or untick them. Rows with errors are rejected, never silently dropped.</p>
+ <div class=wrap><table><tr><th>Use</th><th>Question</th><th>Answer</th><th>Status</th></tr>${IM.rows.map((r,i)=>`<tr><td><input type=checkbox ${r.inc?'checked':''} onchange="imTog(${i})"></td><td><input value="${esc(r.o.q)}" onchange="imEdit(${i},'q',this.value)"><span class=tag>${esc(r.q.type||'?')}</span><span class=tag>${esc(r.q.sub||'no subject')}</span></td><td><input value="${esc(r.o.a)}" onchange="imEdit(${i},'a',this.value)"></td><td>${r.errs.length?`<span class=no>${esc(r.errs.join('; '))}</span>`:r.dup?'<span class=no>Duplicate</span>':'<span class=ok>Valid</span>'}</td></tr>`).join('')}</table></div>
+ <button class=b onclick="confirmImp()">Confirm import</button><button class="b a" onclick="IM=null;render()">Cancel</button></div>`:'');}
+function expRes(){if(!need())return;const ids=new Set(D.quizzes.filter(z=>z.by===me).map(z=>z.id));
+ dl('results.csv','student,quiz,date,correct,total,marks,max\n'+D.results.filter(x=>ids.has(x.qid)).map(x=>[D.users.find(u=>u.e===x.e)?.name,x.qt,new Date(x.d).toISOString(),x.c,x.t,x.mk,x.mx].map(cs).join(',')).join('\n'),'text/csv')}
+function vTeach(){if(!isT())return vHome();const st=D.users.filter(u=>u.role==='student'),mine=D.quizzes.filter(z=>z.by===me);let b='';
+ if(TT==='quiz'||TT==null)b=`<div class=card><h3>Create quiz</h3><p class=mt>${SEL.size} question(s) selected from the Question Bank.</p><input id=qt placeholder="Quiz title"><div class=row><input id=qm type=number min=0 placeholder="Minutes (0 = no timer)" value=0><select id=qf><option value=now>Instant feedback</option><option value=end>Feedback after submission</option></select><input id=qd type=date></div>
+  <label><input id=qs type=checkbox> Randomise question order</label><label>Assign to (none selected = all students)</label><select id=qa multiple>${st.map(s=>`<option value="${esc(s.e)}">${esc(s.name)}</option>`).join('')}</select>
+  <button class="b a" onclick="prevQ()">Preview</button><button class="b a" onclick="mkQuiz(false)">Save draft</button><button class=b onclick="mkQuiz(true)">Publish</button></div>
+  <div class=card><h3>Your quizzes</h3>${mine.map(z=>`<p><b>${esc(z.title)}</b> · ${z.qids.length} q · ${z.pub?'<span class=ok>Published</span>':'Draft'} <button class="b a s" onclick="togQ('${z.id}')">${z.pub?'Unpublish':'Publish'}</button><button class="b d s" onclick="delQz('${z.id}')">Delete</button></p>`).join('')||'<p class=mt>No quizzes yet.</p>'}</div>`;
+ if(TT==='les')b=`<div class=card><h3>Add lesson</h3><div class=row><select id=ls>${opts(Object.entries(SUBS))}</select><input id=ll placeholder="Level"><input id=lp placeholder="Topic"><select id=ld>${opts(['easy','medium','hard'],'medium')}</select></div><input id=lt placeholder="Title"><textarea id=lb placeholder="Lesson content"></textarea><input id=le placeholder="Worked example"><button class=b onclick="addLesson()">Save lesson</button></div>
+  <div class=card><h3>Lessons</h3>${D.lessons.map(l=>`<p>${ICON[l.sub]} ${esc(l.title)} <button class="b a s" onclick="editLesson('${l.id}')">Edit</button><button class="b d s" onclick="delLesson('${l.id}')">Delete</button></p>`).join('')}</div>`;
+ if(TT==='res'){const ids=new Set(mine.map(z=>z.id)),r=D.results.filter(x=>ids.has(x.qid));
+  b=`<div class="card wrap"><h3>Results for your quizzes</h3><button class="b a s" onclick="expRes()">Export CSV</button>
+  <table><tr><th>Student</th><th>Quiz</th><th>Date</th><th>Score</th><th>Accuracy</th></tr>${r.map(x=>`<tr><td>${esc(D.users.find(u=>u.e===x.e)?.name)}</td><td>${esc(x.qt)}</td><td>${new Date(x.d).toLocaleDateString()}</td><td>${x.mk}/${x.mx}</td><td>${Math.round(x.c/x.t*100)}%</td></tr>`).join('')||'<tr><td colspan=5 class=mt>No results yet.</td></tr>'}</table></div>
+  <div class="card wrap"><h3>Student progress</h3><table><tr><th>Student</th><th>Quizzes</th><th>Accuracy</th><th>Lessons done</th></tr>${st.map(s=>`<tr><td>${esc(s.name)}</td><td>${D.results.filter(x=>x.e===s.e).length}</td><td>${pg(s.e)}%</td><td>${s.done.length}</td></tr>`).join('')||'<tr><td colspan=4 class=mt>No students yet.</td></tr>'}</table></div>`}
+ return `<h2>Teacher dashboard</h2><div class=tabs>${[['quiz','Quizzes'],['les','Lessons'],['res','Results']].map(([k,l])=>`<button class="b ${(TT||'quiz')===k?'':'a'}" onclick="TT='${k}';render()">${l}</button>`).join('')}</div>${b}`}
+
+/* ===== shell ===== */
+function render(){
+ if(!CONFIGURED){$('#app').innerHTML=vSetup();return}
+ if(AV==='recover'){$('#app').innerHTML=vRecover();return}
+ if(!me||!U()){$('#app').innerHTML=vAuth();applyBg();return}
+ const T=isT(),items=[['home','Home'],['courses','Courses'],['quizzes','Quizzes'],...(T?[['bank','Question Bank'],['import','Import Questions'],['teach','Teacher']]:[]),['char','My Character'],['progress','Progress'],['profile','Profile'],['settings','Settings']];
+ if(['bank','import','teach'].includes(V)&&!T)V='home';
+ const views={home:vHome,courses:vCourses,lesson:vLesson,quizzes:vQuizzes,run:()=>R?vRun():vHome(),bank:vBank,import:vImport,teach:vTeach,char:vChar,progress:vProgress,profile:vProfile,settings:vSettings,notes:vNotes};
+ $('#app').innerHTML=`<nav><span class=logo>M Learning App</span>${items.map(([k,l])=>`<button class="${V===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('')}<button class="${V==='notes'?'on':''}" onclick="go('notes')" aria-label="Notifications">🔔${unread()||''}</button><button onclick="setTheme(document.documentElement.dataset.t==='dark'?'light':'dark')" aria-label="Toggle theme">◐</button></nav>`+(views[V]||vHome)();
+}
+boot();
+</script></body></html>
